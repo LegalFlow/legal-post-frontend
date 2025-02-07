@@ -1,11 +1,25 @@
 import { getCategoryPosts } from '../../../lib/wordpress';
 import { CATEGORY_IDS } from '../../../lib/constants';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const revalidate = 10;
 
+type Post = {
+  id: number;
+  slug: string;
+  title: { rendered: string };
+  excerpt: { rendered: string };
+  date: string;
+  _embedded?: {
+    'wp:featuredmedia'?: Array<{
+      source_url: string;
+    }>;
+  };
+};
+
 export default async function CultureNewsPage() {
-  const { posts, totalPages, total } = await getCategoryPosts(CATEGORY_IDS.NEWS_CULTURE);
+  const { posts, total } = await getCategoryPosts(CATEGORY_IDS.NEWS_CULTURE);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -15,13 +29,15 @@ export default async function CultureNewsPage() {
         <p className="text-gray-600">아직 작성된 글이 없습니다.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post: any) => (
+          {posts.map((post: Post) => (
             <Link href={`/news/culture/${post.slug}`} key={post.id}>
               <article className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                 {post._embedded?.['wp:featuredmedia']?.[0]?.source_url && (
-                  <img 
+                  <Image 
                     src={post._embedded['wp:featuredmedia'][0].source_url}
                     alt={post.title.rendered}
+                    width={400}
+                    height={300}
                     className="w-full h-48 object-cover mb-4 rounded"
                   />
                 )}

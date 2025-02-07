@@ -6,6 +6,27 @@ const api = axios.create({
 
 const WORDPRESS_API_URL = 'https://legal-post.com/wp-json/wp/v2';
 
+// WordPress Post 타입 정의
+interface WordPressPost {
+  id: number;
+  slug: string;
+  title: {
+    rendered: string;
+  };
+  content: {
+    rendered: string;
+  };
+  excerpt: {
+    rendered: string;
+  };
+  date: string;
+  _embedded?: {
+    'wp:featuredmedia'?: Array<{
+      source_url: string;
+    }>;
+  };
+}
+
 export async function getPosts() {
   try {
     const response = await api.get('/wp/v2/posts', {
@@ -61,11 +82,15 @@ export async function getPost(slug: string) {
   }
 }
 
-export async function getPostBySlug(slug: string) {
+// getPostBySlug 함수에 타입 추가
+export async function getPostBySlug(slug: string): Promise<WordPressPost | null> {
   try {
-    const res = await fetch(`${process.env.WORDPRESS_API_URL}/wp/v2/posts?slug=${slug}&_embed`);
+    const res = await fetch(
+      `${process.env.WORDPRESS_API_URL}/wp/v2/posts?slug=${slug}&_embed`,
+      { next: { revalidate: 10 } }  // revalidate 옵션 추가
+    );
     const posts = await res.json();
-    return posts[0]; // slug는 고유하므로 첫 번째 결과만 반환
+    return posts[0] || null;
   } catch (error) {
     console.error('Error fetching post:', error);
     return null;
